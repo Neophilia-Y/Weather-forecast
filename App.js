@@ -5,6 +5,7 @@ import { StyleSheet, Text, View, ScrollView, Dimensions } from 'react-native';
 
 const WINDOW_WIDTH = Dimensions.get("window").width;
 const WINDOW_HEIGHT = Dimensions.get("window").height;
+const SCROLLVIEW_PADDING = WINDOW_WIDTH - 60;
 const WEATHER_API = "c48b9bb9f8b45f2b0640a3c5f39ad98c";
 
 
@@ -14,6 +15,7 @@ export default function App() {
   const [location, setLocation] = useState("Seoul");
   const [errorMsg, setErrorMsg] = useState("null");
   const [ok, setOk] = useState(true);
+  const [index, setIndex] = useState(0);
   console.log("App started")
 
   const getWeahter = async () => {
@@ -39,6 +41,19 @@ export default function App() {
     console.log(weatherInfo)
 
   }
+  // Calculate scroll container index.
+  const handleScroll = (event) => {
+    let scrollIndex;
+    if (event.nativeEvent.contentOffset.x <= 0) {
+      scrollIndex = 0;
+    } else {
+      scrollIndex = Math.floor((event.nativeEvent.contentOffset.x + SCROLLVIEW_PADDING / 2) / SCROLLVIEW_PADDING);
+    }
+
+    if (scrollIndex !== index) {
+      setIndex(scrollIndex)
+    }
+  }
 
   useEffect(() => {
     getWeahter();
@@ -52,10 +67,12 @@ export default function App() {
       </View>
       <View style={styles.dateContainer}>
         <Text style={styles.day}>Monday</Text>
-        <Text style={styles.date}>04 November</Text>
+        <Text style={styles.date}>04 November {index}</Text>
       </View>
       <View style={styles.tempContainer} >
-        <ScrollView style={styles.scrollContainer} horizontal={true} pagingEnabled={true}>
+        <ScrollView style={styles.scrollContainer} horizontal={true} pagingEnabled={true} onScroll={(e) => handleScroll(e)} scrollEventThrottle={2} >
+
+
           <View style={styles.dailyContainer}>
             <Text style={styles.degree}>27 ℃ </Text>
             <Text style={styles.weatherIcon}>Sunny</Text>
@@ -68,6 +85,7 @@ export default function App() {
             <Text style={styles.degree}>27 ℃ </Text>
             <Text style={styles.weatherIcon}>Sunny</Text>
           </View>
+
         </ScrollView>
       </View>
       <StatusBar style="dark" />
@@ -122,6 +140,6 @@ const styles = StyleSheet.create({
   scrollContainer: {
   },
   dailyContainer: {
-    width: WINDOW_WIDTH - 60,
+    width: SCROLLVIEW_PADDING,
   }
 });
