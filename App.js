@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import * as Location from "expo-location";
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
 
 const WINDOW_WIDTH = Dimensions.get("window").width;
 const WINDOW_HEIGHT = Dimensions.get("window").height;
@@ -16,7 +16,22 @@ export default function App() {
   const [errorMsg, setErrorMsg] = useState("null");
   const [ok, setOk] = useState(true);
   const [index, setIndex] = useState(0);
+  const [weatherData, setWeatherData] = useState([]);
   console.log("App started")
+
+  // Calculate date
+  const getDate = () => {
+    if (weatherData.length === 0) {
+      return { 0: "Have a good Day", 1: ":)" }
+    }
+    const date = new Date(weatherData[index].dt * 1000);
+    const convertDay = date.toDateString().split(" ");
+    const day = {
+      0: convertDay[0],
+      1: convertDay[1] + "  " + convertDay[2],
+    }
+    return day
+  }
 
   const getWeahter = async () => {
     const { granted } = await Location.requestForegroundPermissionsAsync();
@@ -38,8 +53,8 @@ export default function App() {
     ).then((response) => response.json()
     ).catch((err) => console.log(err))
 
-    console.log(weatherInfo)
-
+    setWeatherData(weatherInfo.daily);
+    console.log(weatherData);
   }
   // Calculate scroll container index.
   const handleScroll = (event) => {
@@ -47,12 +62,15 @@ export default function App() {
     if (event.nativeEvent.contentOffset.x <= 0) {
       scrollIndex = 0;
     } else {
-      scrollIndex = Math.floor((event.nativeEvent.contentOffset.x + SCROLLVIEW_PADDING / 2) / SCROLLVIEW_PADDING);
+      scrollIndex = Math.floor((event.nativeEvent.contentOffset.x + WINDOW_WIDTH / 2) / WINDOW_WIDTH);
     }
+    // const date = new Date(weatherData[index].dt * 1000)
+    // console.log(date);
 
     if (scrollIndex !== index) {
       setIndex(scrollIndex)
     }
+
   }
 
   useEffect(() => {
@@ -66,25 +84,25 @@ export default function App() {
         <Text style={styles.cityName}>{location}</Text>
       </View>
       <View style={styles.dateContainer}>
-        <Text style={styles.day}>Monday</Text>
-        <Text style={styles.date}>04 November {index}</Text>
+        <Text style={styles.day}>{getDate()[0]}</Text>
+        <Text style={styles.date}>{getDate()[1]}</Text>
       </View>
       <View style={styles.tempContainer} >
-        <ScrollView style={styles.scrollContainer} horizontal={true} pagingEnabled={true} onScroll={(e) => handleScroll(e)} scrollEventThrottle={2} >
+        <ScrollView style={styles.scrollContainer} horizontal={true} pagingEnabled={true} onScroll={(e) => handleScroll(e)} scrollEventThrottle={5} >
+          {weatherData.length === 0 ? (
+            <View style={styles.dailyContainer}>
+              <ActivityIndicator color="black" size="large" />
+            </View>) : (
+            weatherData.map((weather, i) =>
+              <View style={styles.dailyContainer} key={i}>
+                <Text style={styles.degree}>{parseFloat(weather.temp.day).toFixed(1)} ℃ </Text>
+                <Text style={styles.weatherIcon}>{weather.weather[0].main}</Text>
+                <Text style={styles.weatherIcon}>{weather.weather[0].description}</Text>
+              </View>)
 
+          )
+          }
 
-          <View style={styles.dailyContainer}>
-            <Text style={styles.degree}>27 ℃ </Text>
-            <Text style={styles.weatherIcon}>Sunny</Text>
-          </View>
-          <View style={styles.dailyContainer}>
-            <Text style={styles.degree}>27 ℃ </Text>
-            <Text style={styles.weatherIcon}>Sunny</Text>
-          </View>
-          <View style={styles.dailyContainer}>
-            <Text style={styles.degree}>27 ℃ </Text>
-            <Text style={styles.weatherIcon}>Sunny</Text>
-          </View>
 
         </ScrollView>
       </View>
@@ -98,8 +116,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFD503',
-    paddingLeft: 30,
-    paddingRight: 30,
 
   },
   cityContainer: {
@@ -113,9 +129,11 @@ const styles = StyleSheet.create({
   },
   dateContainer: {
     flex: 0.5,
+    paddingLeft: 30,
+    paddingRight: 30,
   },
   day: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: "600",
   },
   date: {
@@ -132,14 +150,19 @@ const styles = StyleSheet.create({
     borderWidth: 7,
   },
   degree: {
-    fontSize: 100,
+    fontSize: 90,
   },
   weatherIcon: {
     fontSize: 20,
   },
   scrollContainer: {
+    width: WINDOW_WIDTH,
+    paddingLeft: 30,
+    paddingRight: 30,
+
   },
   dailyContainer: {
-    width: SCROLLVIEW_PADDING,
+    width: WINDOW_WIDTH,
+
   }
 });
