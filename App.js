@@ -1,5 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import * as Location from "expo-location";
+import { Fontisto } from "@expo/vector-icons";
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
 
@@ -17,7 +18,17 @@ export default function App() {
   const [ok, setOk] = useState(true);
   const [index, setIndex] = useState(0);
   const [weatherData, setWeatherData] = useState([]);
-  console.log("App started")
+
+  //Icon hash map
+  const icons = {
+    Clouds: "cloudy",
+    Clear: "day-sunny",
+    Atmosphere: "cloudy-gusts",
+    Snow: "snow",
+    Rain: "rains",
+    Drizzle: "rain",
+    Thunderstorm: "lightning",
+  };
 
   // Calculate date
   const getDate = () => {
@@ -54,7 +65,6 @@ export default function App() {
     ).catch((err) => console.log(err))
 
     setWeatherData(weatherInfo.daily);
-    console.log(weatherData);
   }
   // Calculate scroll container index.
   const handleScroll = (event) => {
@@ -64,8 +74,6 @@ export default function App() {
     } else {
       scrollIndex = Math.floor((event.nativeEvent.contentOffset.x + WINDOW_WIDTH / 2) / WINDOW_WIDTH);
     }
-    // const date = new Date(weatherData[index].dt * 1000)
-    // console.log(date);
 
     if (scrollIndex !== index) {
       setIndex(scrollIndex)
@@ -90,14 +98,18 @@ export default function App() {
       <View style={styles.tempContainer} >
         <ScrollView style={styles.scrollContainer} horizontal={true} pagingEnabled={true} onScroll={(e) => handleScroll(e)} scrollEventThrottle={5} >
           {weatherData.length === 0 ? (
-            <View style={styles.dailyContainer}>
+            <View style={{ ...styles.dailyContainer, alignItems: "center" }}>
               <ActivityIndicator color="black" size="large" />
             </View>) : (
             weatherData.map((weather, i) =>
               <View style={styles.dailyContainer} key={i}>
                 <Text style={styles.degree}>{parseFloat(weather.temp.day).toFixed(1)} ℃ </Text>
-                <Text style={styles.weatherIcon}>{weather.weather[0].main}</Text>
-                <Text style={styles.weatherIcon}>{weather.weather[0].description}</Text>
+                <Fontisto
+                  name={icons[weather.weather[0].main]}
+                  size={68}
+                  color="black"
+                />
+                <Text style={styles.weatherDescription}>{weather.weather[0].description}</Text>
               </View>)
 
           )
@@ -152,8 +164,10 @@ const styles = StyleSheet.create({
   degree: {
     fontSize: 90,
   },
-  weatherIcon: {
-    fontSize: 20,
+  weatherDescription: {
+    fontSize: 30,
+    marginTop: 30,
+    fontFamily: "Cochin",
   },
   scrollContainer: {
     width: WINDOW_WIDTH,
